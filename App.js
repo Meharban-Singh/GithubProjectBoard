@@ -7,6 +7,7 @@ export default function App() {
             <Text style={styles.title}>GitHub Project Boards</Text>
             <Button
                 title="Login with gitHub"
+                color="#FF5733"
             ></Button>
         </View>
     )
