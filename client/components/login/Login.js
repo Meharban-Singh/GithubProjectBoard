@@ -1,6 +1,19 @@
 import React from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native'
 
+function handleLogin() {
+    fetch('http://192.168.100.105:1010/login')
+        .then(res => {
+            if(res.status === 200) {
+                console.log('SUCCESS')
+                //TODO: Redirect to repos page on client side
+            }
+            else 
+                console.log('CANNOT LOGIN')
+        })
+        .catch(err => console.log(err))
+}
+
 export default function Home() {
     return (
         <View>
@@ -8,7 +21,7 @@ export default function Home() {
             <Button
                 title="Login with gitHub"
                 color="#FF5733"
-                //onPress= go to Repos page
+                onPress= {handleLogin}
             />
         </View>
     )
