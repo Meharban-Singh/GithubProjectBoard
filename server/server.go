@@ -1,66 +1,53 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/labstack/echo"
 )
 
-var accessToken string
+var (
+	accessToken string
+)
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	//If URL is something other than login, return 404
-    if r.URL.Path != "/login" {
-        http.Error(w, "404 not found.", http.StatusNotFound)
-        return
-	}
-	
-	//If not a GET request, return 404
-    if r.Method != "GET" {
-        http.Error(w, "Method is not supported.", http.StatusNotFound)
-        return
-	}
-	
-	//Get Authorization token from config.json
-	data, err := ioutil.ReadFile("./config.json")
-    if err != nil {
-	  log.Fatal("FATAL: Cannot read configurations!", err)
-	}
-
+func getAccessToken() {
 	//Object representing config.json file
 	type ConfigObj struct {
 		PAT string
 	}
-  
-	var configs ConfigObj
-
+	
+	var config ConfigObj
+	
+	//Get Authorization token from config.json
+	data, err := ioutil.ReadFile("./config.json")
+	if err != nil {
+	  log.Fatal("FATAL: Cannot read configurations!", err)
+	}
+	
 	// unmarshall json file 
-    err = json.Unmarshal(data, &configs)
-    if err != nil {
-        log.Fatal("FATAL: Cannot get authorization token!", err)
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatal("FATAL: Cannot get authorization token!", err)
 	}
 	
 	//Save access token 
-	accessToken = configs.PAT
-
-	w.WriteHeader(http.StatusOK);
+	accessToken = config.PAT
 }
 
-func reposHandler(w http.ResponseWriter, r *http.Request) {
-	//If URL is something other than /repos, return 404
-    if r.URL.Path != "/repos" {
-        http.Error(w, "404 not found.", http.StatusNotFound)
-        return
-	}
+func loginHandler(c echo.Context) error {
+	getAccessToken();
 	
-	//If not a GET request, return 404
-    if r.Method != "GET" {
-        http.Error(w, "Method is not supported.", http.StatusNotFound)
-        return
+	if accessToken != "" {
+		return c.String(http.StatusOK, "SUCCESS");
+	} else {
+		return c.String(http.StatusUnauthorized, "REJECTED")
 	}
-	
+}
+
+func getAllRepos(c echo.Context) error {
 	//Get HTTP client 
 	client := &http.Client{}
 	
@@ -68,6 +55,7 @@ func reposHandler(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest("GET", "https://api.github.com/user/repos", nil)
 	if err != nil {
 		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
 	}
 	
 	//Set Authorization token header
@@ -77,6 +65,7 @@ func reposHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
 	}
 	
 	//Read response and send it 
@@ -84,22 +73,19 @@ func reposHandler(w http.ResponseWriter, r *http.Request) {
 	res.Body.Close()
 	if err != nil {
 		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GB!");
 	}
 	
-	w.Write(data)
+	return c.String(http.StatusOK, string(data))
 }
 
 func main() {
-	http.HandleFunc("/login", loginHandler)
-	
-	//GET Repos
-	http.HandleFunc("/repos", reposHandler)
-	
+	app := echo.New()
 
-	//LISTEN AND SERVER SERVER
-	fmt.Printf("Starting server at port:1010")
-	err := http.ListenAndServe(":1010", nil)
-	if err != nil {
-		log.Fatal(err)
-	} 
+	app.GET("/login", loginHandler)
+	//app.GET("/repos/:repo/projects", getProjectsOfRepo)
+	app.GET("/repos", getAllRepos)
+
+	//Start server
+	app.Logger.Fatal(app.Start(":1010"))
 }
