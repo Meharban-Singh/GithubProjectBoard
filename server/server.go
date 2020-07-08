@@ -13,6 +13,7 @@ var (
 	accessToken string
 )
 
+//TODO: get a proper access token after registering for client ID
 func getAccessToken() {
 	//Object representing config.json file
 	type ConfigObj struct {
@@ -79,11 +80,47 @@ func getAllRepos(c echo.Context) error {
 	return c.String(http.StatusOK, string(data))
 }
 
+func getProjectsOfRepo(c echo.Context) error {
+	//Get HTTP client 
+	client := &http.Client{}
+	
+	var url =  "https://api.github.com/repos/" + c.Param("user") + "/" + c.Param("repo") + "/projects"
+
+	//Create GET request object
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+	}
+	
+	//Set Authorization token header
+	req.Header.Set("Accept", "application/vnd.github.inertia-preview+json")
+	req.Header.Set("Authorization", "token " + accessToken)
+	
+	//Send request
+	res, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+	}
+
+	//Read response and send it 
+	data, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GB!");
+	}
+
+	return c.String(http.StatusOK, string(data))
+}
+
+
 func main() {
 	app := echo.New()
 
 	app.GET("/login", loginHandler)
-	//app.GET("/repos/:repo/projects", getProjectsOfRepo)
+	app.GET("/repos/:user/:repo/projects", getProjectsOfRepo)
 	app.GET("/repos", getAllRepos)
 
 	//Start server
