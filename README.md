@@ -24,8 +24,8 @@ dependencies required to run the program on your mobile device or on an emulator
 
 
 3. Install Expo.
-  * Run this anywhere in the terminal once you have node installed:
-  ``npm install -g expo-cli``
+    * Run this anywhere in the terminal once you have node installed:
+    ``npm install -g expo-cli``
 
 
 4. Run ``expo start`` in the ``client`` folder in the cloned directory.
