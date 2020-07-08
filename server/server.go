@@ -38,9 +38,13 @@ func getAccessToken() {
 	accessToken = config.PAT
 }
 
+// Handles login requests - stores access token
+// URL '/login'
+// Returns status codes 400 or 401
 func loginHandler(c echo.Context) error {
 	getAccessToken();
 	
+	// If got status code, return 400 else return 401
 	if accessToken != "" {
 		return c.String(http.StatusOK, "SUCCESS");
 	} else {
@@ -48,6 +52,9 @@ func loginHandler(c echo.Context) error {
 	}
 }
 
+// Returns a list of repo's for authenticated user
+// URL: /repos
+// Returns status codes 400 or 500 for errors
 func getAllRepos(c echo.Context) error {
 	//Get HTTP client 
 	client := &http.Client{}
@@ -56,7 +63,7 @@ func getAllRepos(c echo.Context) error {
 	req, err := http.NewRequest("GET", "https://api.github.com/user/repos", nil)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
 	}
 	
 	//Set Authorization token header
@@ -66,7 +73,7 @@ func getAllRepos(c echo.Context) error {
 	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
 	}
 	
 	//Read response and send it 
@@ -74,12 +81,17 @@ func getAllRepos(c echo.Context) error {
 	res.Body.Close()
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GB!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GH!");
 	}
 	
+	// All good now, send 400
 	return c.String(http.StatusOK, string(data))
 }
 
+// Returns all projects of some repo
+// User must be authenticated before
+// URL: /repos/:ownerOfRepo/:repoName/projects
+// Returns status codes 400 or 500
 func getProjectsOfRepo(c echo.Context) error {
 	//Get HTTP client 
 	client := &http.Client{}
@@ -90,7 +102,7 @@ func getProjectsOfRepo(c echo.Context) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
 	}
 	
 	//Set Authorization token header
@@ -101,7 +113,7 @@ func getProjectsOfRepo(c echo.Context) error {
 	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GB account!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
 	}
 
 	//Read response and send it 
@@ -109,16 +121,20 @@ func getProjectsOfRepo(c echo.Context) error {
 	res.Body.Close()
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GB!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GH!");
 	}
 
+	// All ok, sned 400
 	return c.String(http.StatusOK, string(data))
 }
 
 
+// Main function
 func main() {
+	// Create a new echo object
 	app := echo.New()
 
+	// Routes
 	app.GET("/login", loginHandler)
 	app.GET("/repos/:user/:repo/projects", getProjectsOfRepo)
 	app.GET("/repos", getAllRepos)
