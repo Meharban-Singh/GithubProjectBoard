@@ -48,41 +48,17 @@ func getAccessToken() {
 
 // Sends a GET request to GitHub with URL provided
 func sendGETReqToGH(url string, c echo.Context) error {
-	//Get HTTP client 
-	client := &http.Client{}
-
 	//Create GET request object
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
 	}
-	
-	//Set Authorization token header
-	req.Header.Set("Accept", "application/vnd.github.inertia-preview+json")
-	req.Header.Set("Authorization", "token " + accessToken)
-	
-	//Send request
-	res, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
-	}
-
-	//Read response and send it 
-	data, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response from GH!");
-	}
-
-	// All ok, sned 400
-	return c.String(http.StatusOK, string(data))
+	return sendReqToGH(req, c, http.StatusOK)
 }
 
 // Sends a POST req to GH
-func sendPOSTReqToGH(req *http.Request, c echo.Context) error {
+func sendReqToGH(req *http.Request, c echo.Context, statusCode int) error {
 	//Set Authorization token header
 	req.Header.Set("Accept", "application/vnd.github.inertia-preview+json")
 	req.Header.Set("Authorization", "token " + accessToken)
@@ -103,12 +79,12 @@ func sendPOSTReqToGH(req *http.Request, c echo.Context) error {
 	}
 	
 	// All ok, sned 400
-	return c.String(http.StatusOK, string(body))
+	return c.String(statusCode, string(body))
 }
 
 // Handles login requests - stores access token
-// URL '/login'
-// Returns status codes 400 or 401
+// GET '/login'
+// Returns 200 OK on success
 func loginHandler(c echo.Context) error {
 	getAccessToken();
 	
@@ -121,25 +97,29 @@ func loginHandler(c echo.Context) error {
 }
 
 // Returns a list of repo's for authenticated user
-// URL: /repos
-// Returns status codes 400 or 500 for errors
+// GET /repos
+// Returns 200 OK on success
 func getAllRepos(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/user/repos", c)
 }
 
 // Returns all projects of some repo
 // User must be authenticated before
-// URL: /repos/:ownerOfRepo/:repoName/projects
-// Returns status codes 400 or 500
+// GET /repos/:ownerOfRepo/:repoName/projects
+// Returns 200 OK on success
 func getProjectsOfRepo(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/repos/" + c.Param("user") + "/" + c.Param("repo") + "/projects", c)
 }
 
+// Returns all details for a project
+// GET /projects/:projectID
 func getProjectDetails(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/" + c.Param("projectID"), c)
 }
 
 // Creates a new project in the repo of the user
+// POST /repos/:user/:repo/projects
+// Returns 201 Created on success
 func createNewProject(c echo.Context) error {
 	// Create a new Project obj -> to be sent to GH in POST req
 	p := new(Project)
@@ -155,7 +135,24 @@ func createNewProject(c echo.Context) error {
 
 	// Send POST req to GH with project object 
 	req, err := http.NewRequest("POST", "https://api.github.com/repos/" + c.Param("user") + "/" + c.Param("repo") + "/projects", bytes.NewBuffer(jsonObj))
-	return sendPOSTReqToGH(req, c)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!");
+	}
+	return sendReqToGH(req, c, http.StatusCreated)
+}
+
+// Deletes a project
+// DELETE /projects/:projectID
+// Returns 204 No Content on success
+func deleteProject(c echo.Context) error {
+	// Send POST req to GH with project object 
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/" + c.Param("projectID"), nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!");
+	}
+	return sendReqToGH(req, c, http.StatusNoContent)
 }
 
 // Main function
@@ -170,6 +167,8 @@ func main() {
 	app.GET("/repos", getAllRepos)
 
 	app.POST("/repos/:user/:repo/projects", createNewProject)
+
+	app.DELETE("/projects/:projectID", deleteProject)
 
 	//Start server
 	app.Logger.Fatal(app.Start(":1010"))
