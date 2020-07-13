@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"bytes"
+	"log"
+	"net/http"
 
 	"github.com/labstack/echo"
 )
@@ -15,12 +15,20 @@ var (
 )
 
 type (
-	// Project struct 
+	// Project struct
 	Project struct {
-		Name  string `json:"name" xml:"name" form:"name" query:"name"`
+		Name string `json:"name" xml:"name" form:"name" query:"name"`
 		Body string `json:"body" xml:"body" form:"body" query:"body"`
 	}
-	// Config struct -> should be same as config.js 
+	// Column struct
+	Column struct {
+		Name string `json:"name" xml:"name" form:"name" query:"name"`
+	}
+	// Card struct
+	Card struct {
+		Note string `json:"note" xml:"note" form:"note" query:"note"`
+	}
+	// Config struct -> should be same as config.js
 	ConfigObj struct {
 		PAT string
 	}
@@ -29,20 +37,20 @@ type (
 //TODO: get a proper access token after registering for client ID
 func getAccessToken() {
 	var config ConfigObj
-	
+
 	//Get Authorization token from config.json
 	data, err := ioutil.ReadFile("./config.json")
 	if err != nil {
-	  log.Fatal("FATAL: Cannot read configurations!", err)
+		log.Fatal("FATAL: Cannot read configurations!", err)
 	}
-	
-	// unmarshall json file 
+
+	// unmarshall json file
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatal("FATAL: Cannot get authorization token!", err)
 	}
-	
-	//Save access token 
+
+	//Save access token
 	accessToken = config.PAT
 }
 
@@ -52,7 +60,7 @@ func sendGETReqToGH(url string, c echo.Context) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot access GH account!")
 	}
 	return sendReqToGH(req, c, http.StatusOK)
 }
@@ -61,12 +69,12 @@ func sendGETReqToGH(url string, c echo.Context) error {
 func sendReqToGH(req *http.Request, c echo.Context, statusCode int) error {
 	//Set Authorization token header
 	req.Header.Set("Accept", "application/vnd.github.inertia-preview+json")
-	req.Header.Set("Authorization", "token " + accessToken)
+	req.Header.Set("Authorization", "token "+accessToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response!")
 	}
 
 	defer resp.Body.Close()
@@ -75,9 +83,9 @@ func sendReqToGH(req *http.Request, c echo.Context, statusCode int) error {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot read response!")
 	}
-	
+
 	// All ok, sned 400
 	return c.String(statusCode, string(body))
 }
@@ -86,11 +94,11 @@ func sendReqToGH(req *http.Request, c echo.Context, statusCode int) error {
 // GET '/login'
 // Returns 200 OK on success
 func loginHandler(c echo.Context) error {
-	getAccessToken();
-	
+	getAccessToken()
+
 	// If got status code, return 400 else return 401
 	if accessToken != "" {
-		return c.String(http.StatusOK, "SUCCESS");
+		return c.String(http.StatusOK, "SUCCESS")
 	} else {
 		return c.String(http.StatusUnauthorized, "REJECTED")
 	}
@@ -108,13 +116,13 @@ func getAllRepos(c echo.Context) error {
 // GET /repos/:ownerOfRepo/:repoName/projects
 // Returns 200 OK on success
 func getProjectsOfRepo(c echo.Context) error {
-	return sendGETReqToGH("https://api.github.com/repos/" + c.Param("user") + "/" + c.Param("repo") + "/projects", c)
+	return sendGETReqToGH("https://api.github.com/repos/"+c.Param("user")+"/"+c.Param("repo")+"/projects", c)
 }
 
 // Returns all details for a project
 // GET /projects/:projectID
 func getProjectDetails(c echo.Context) error {
-	return sendGETReqToGH("https://api.github.com/projects/" + c.Param("projectID"), c)
+	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID"), c)
 }
 
 // Creates a new project in the repo of the user
@@ -133,11 +141,11 @@ func createNewProject(c echo.Context) error {
 		print(err)
 	}
 
-	// Send POST req to GH with project object 
-	req, err := http.NewRequest("POST", "https://api.github.com/repos/" + c.Param("user") + "/" + c.Param("repo") + "/projects", bytes.NewBuffer(jsonObj))
+	// Send POST req to GH with project object
+	req, err := http.NewRequest("POST", "https://api.github.com/repos/"+c.Param("user")+"/"+c.Param("repo")+"/projects", bytes.NewBuffer(jsonObj))
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
 	return sendReqToGH(req, c, http.StatusCreated)
 }
@@ -146,11 +154,87 @@ func createNewProject(c echo.Context) error {
 // DELETE /projects/:projectID
 // Returns 204 No Content on success
 func deleteProject(c echo.Context) error {
-	// Send POST req to GH with project object 
-	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/" + c.Param("projectID"), nil)
+	// Send POST req to GH with project object
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/"+c.Param("projectID"), nil)
 	if err != nil {
 		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!");
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusNoContent)
+}
+
+// Creates a project column
+// POST /projects/:projectID/columns
+// Returns 200 OK on success
+func createNewColumn(c echo.Context) error {
+	// Create new column object
+	col := new(Column)
+	if err := c.Bind(col); err != nil {
+		return err
+	}
+
+	// Convert col to JSON
+	jsonObj, err := json.Marshal(col)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with column object
+	req, err := http.NewRequest("POST", "https://api.github.com/projects/"+c.Param("projectID")+"/columns", bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusCreated)
+}
+
+// Deletes a project column
+// DELETE /projects/columns/:column_id
+// Returns 204 No Content on success
+func deleteColumn(c echo.Context) error {
+	// Send DELETE request to GH with columnID
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/"+c.Param("columnID"), nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusNoContent)
+}
+
+// Creates a project card
+// POST /projects/columns/:column_id/cards
+// Returns 201 Created on success
+func createNewCard(c echo.Context) error {
+	// Create new card object
+	card := new(Card)
+	if err := c.Bind(card); err != nil {
+		return err
+	}
+
+	// Convert card to JSON
+	jsonObj, err := json.Marshal(card)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with card object
+	req, err := http.NewRequest("POST", "http://api.github.com/projects/columns/"+c.Param("columnID")+"/cards", bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusCreated)
+}
+
+// Delete a project card
+// DELETE /projects/columns/cards/:card_id
+// Returns Status: 204 No Content on success
+func deleteCard(c echo.Context) error {
+	// Send DELETE request to GH with cardID
+	req, err := http.NewRequest("DELETE", "http://api.github.com/projects/columns/cards/"+c.Param("cardID"), nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
 	return sendReqToGH(req, c, http.StatusNoContent)
 }
