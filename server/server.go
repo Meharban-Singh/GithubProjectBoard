@@ -246,13 +246,31 @@ func main() {
 
 	// Routes
 	app.GET("/login", loginHandler)
+
+	app.GET("/repos", getAllRepos)
+	
+	// PROJECTS 
+	app.POST("/repos/:user/:repo/projects", createNewProject)
 	app.GET("/repos/:user/:repo/projects", getProjectsOfRepo)
 	app.GET("/projects/:projectID", getProjectDetails)
-	app.GET("/repos", getAllRepos)
-
-	app.POST("/repos/:user/:repo/projects", createNewProject)
-
+	// TODO: app.PATCH("/projects/:projectID", updateProject)
 	app.DELETE("/projects/:projectID", deleteProject)
+	
+	// COLOUMNS 
+	app.POST("/projects/:projectID/columns", createNewColumn)
+	// TODO: app.GET("/projects/:projectID/columns", getColumnsOfProject)
+	// TODO: app.GET("/projects/columns/:columnID", getColumnDetails)
+	// TODO: app.PATCH("/projects/columns/:columnID", updateColumn)
+	app.DELETE("/projects/columns/:columnID", deleteColumn)
+	// TODO: app.POST("/projects/columns/:columnID/moves", moveColumn)
+	
+	// CARDS 
+	app.POST("/projects/columns/:columnID/cards", createNewCard)
+	// TODO: app.GET("/projects/columns/:columnID/cards", getCardsOfColumn)
+	// TODO: app.GET("/projects/columns/cards/:cardID", getCardDetails)
+	// TODO: app.PATCH("/projects/columns/cards/:cardID", updateCard)
+	app.DELETE("/projects/columns/cards/:cardID", deleteCard)
+	// TODO: app.POST("/projects/columns/cards/:cardID/moves", moveCard)
 
 	//Start server
 	app.Logger.Fatal(app.Start(":1010"))
