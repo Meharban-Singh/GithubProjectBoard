@@ -202,7 +202,7 @@ func deleteColumn(c echo.Context) error {
 }
 
 // Creates a project card
-// POST /projects/columns/:column_id/cards
+// POST /columns/:column_id/cards
 // Returns 201 Created on success
 func createNewCard(c echo.Context) error {
 	// Create new card object
@@ -227,7 +227,7 @@ func createNewCard(c echo.Context) error {
 }
 
 // Delete a project card
-// DELETE /projects/columns/cards/:card_id
+// DELETE /columns/cards/:card_id
 // Returns Status: 204 No Content on success
 func deleteCard(c echo.Context) error {
 	// Send DELETE request to GH with cardID
@@ -259,18 +259,18 @@ func main() {
 	// COLOUMNS 
 	app.POST("/projects/:projectID/columns", createNewColumn)
 	// TODO: app.GET("/projects/:projectID/columns", getColumnsOfProject)
-	// TODO: app.GET("/projects/columns/:columnID", getColumnDetails)
-	// TODO: app.PATCH("/projects/columns/:columnID", updateColumn)
-	app.DELETE("/projects/columns/:columnID", deleteColumn)
-	// TODO: app.POST("/projects/columns/:columnID/moves", moveColumn)
+	// TODO: app.GET("/columns/:columnID", getColumnDetails)
+	// TODO: app.PATCH("/columns/:columnID", updateColumn)
+	app.DELETE("/columns/:columnID", deleteColumn)
+	// TODO: app.POST("/columns/:columnID/moves", moveColumn)
 	
 	// CARDS 
-	app.POST("/projects/columns/:columnID/cards", createNewCard)
-	// TODO: app.GET("/projects/columns/:columnID/cards", getCardsOfColumn)
-	// TODO: app.GET("/projects/columns/cards/:cardID", getCardDetails)
-	// TODO: app.PATCH("/projects/columns/cards/:cardID", updateCard)
-	app.DELETE("/projects/columns/cards/:cardID", deleteCard)
-	// TODO: app.POST("/projects/columns/cards/:cardID/moves", moveCard)
+	app.POST("/columns/:columnID/cards", createNewCard)
+	// TODO: app.GET("/columns/:columnID/cards", getCardsOfColumn)
+	// TODO: app.GET("/cards/:cardID", getCardDetails)
+	// TODO: app.PATCH("/cards/:cardID", updateCard)
+	app.DELETE("/cards/:cardID", deleteCard)
+	// TODO: app.POST("/cards/:cardID/moves", moveCard)
 
 	//Start server
 	app.Logger.Fatal(app.Start(":1010"))
