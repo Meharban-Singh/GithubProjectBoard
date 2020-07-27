@@ -261,6 +261,12 @@ func getCardsOfColumn(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/columns/"+c.Param("columnID")+"/cards", c)
 }
 
+// Returns all details for a card
+// GET /cards/:cardID
+func getCardDetails(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/projects/columns/cards/"+c.Param("cardID"), c)
+}
+
 // Main function
 func main() {
 	// Create a new echo object
@@ -289,7 +295,7 @@ func main() {
 	// CARDS 
 	app.POST("/columns/:columnID/cards", createNewCard)
 	app.GET("/columns/:columnID/cards", getCardsOfColumn)
-	// TODO: app.GET("/cards/:cardID", getCardDetails)
+	app.GET("/cards/:cardID", getCardDetails)
 	// TODO: app.PATCH("/cards/:cardID", updateCard)
 	app.DELETE("/cards/:cardID", deleteCard)
 	// TODO: app.POST("/cards/:cardID/moves", moveCard)
