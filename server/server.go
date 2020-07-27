@@ -122,6 +122,7 @@ func getAllRepos(c echo.Context) error {
 // Creates a new project in the repo of the user
 // POST /repos/:user/:repo/projects
 // Returns 201 Created on success
+// Req body = { "name" : "<name>", "body" : "<OPTIONAL body description>"}
 func createNewProject(c echo.Context) error {
 	// Create a new Project obj -> to be sent to GH in POST req
 	p := new(Project)
@@ -161,6 +162,7 @@ func getProjectDetails(c echo.Context) error {
 // Updates a Project
 // PATCH /projects/:projectID
 // Returns 200 OK on success
+// Req body = { "name" : "<OPTIONAL name>", "body" : "<OPTIONAL body description>"}
 func updateProject(c echo.Context) error {
 	// Create new Project object
 	project := new(Project)
@@ -199,6 +201,7 @@ func deleteProject(c echo.Context) error {
 // Creates a project column
 // POST /projects/:projectID/columns
 // Returns 200 OK on success
+// Req body = { "name" : "<name>" }
 func createNewColumn(c echo.Context) error {
 	// Create new column object
 	col := new(Column)
@@ -238,6 +241,7 @@ func getColumnDetails(c echo.Context) error {
 // Updates a column
 // PATCH /column/:columnID
 // Returns 200 OK on success
+// Req body = { "name" : "<name>" }
 func updateColumn(c echo.Context) error {
 	// Create new card object
 	column := new(Column)
@@ -276,7 +280,7 @@ func deleteColumn(c echo.Context) error {
 // Moves a Column to a specific position
 // POST /columns/:columnID/moves
 // Returns 200 OK on success
-// Req body - { "position" : "first"} 
+// Req body = { "position" : "first"} 
 // Other options for position: last, after:colID
 func moveColumn(c echo.Context) error {
 	// Create new moves object
@@ -303,6 +307,7 @@ func moveColumn(c echo.Context) error {
 // Creates a project card
 // POST /columns/:column_id/cards
 // Returns 201 Created on success
+// Req body = { "note" : "<new card note>" }
 func createNewCard(c echo.Context) error {
 	// Create new card object
 	card := new(Card)
@@ -342,6 +347,7 @@ func getCardDetails(c echo.Context) error {
 // Updates a card
 // PATCH /cards/:cardID
 // Returns 200 OK on success
+// Req body = { "note" : "<new card note>" }
 func updateCard(c echo.Context) error {
 	// Create new card object
 	card := new(Card)
@@ -380,7 +386,7 @@ func deleteCard(c echo.Context) error {
 // Moves a Card to a specific position
 // POST /cards/:cardID/moves
 // Returns 200 OK on success
-// Req body - { "position" : "top"} 
+// Req body = { "position" : "top"} 
 // Other options for position: bottom, after:cardID
 func moveCard(c echo.Context) error {
 	// Create new moves object
