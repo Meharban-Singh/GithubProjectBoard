@@ -119,20 +119,6 @@ func getAllRepos(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/user/repos", c)
 }
 
-// Returns all projects of some repo
-// User must be authenticated before
-// GET /repos/:ownerOfRepo/:repoName/projects
-// Returns 200 OK on success
-func getProjectsOfRepo(c echo.Context) error {
-	return sendGETReqToGH("https://api.github.com/repos/"+c.Param("user")+"/"+c.Param("repo")+"/projects", c)
-}
-
-// Returns all details for a project
-// GET /projects/:projectID
-func getProjectDetails(c echo.Context) error {
-	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID"), c)
-}
-
 // Creates a new project in the repo of the user
 // POST /repos/:user/:repo/projects
 // Returns 201 Created on success
@@ -156,6 +142,20 @@ func createNewProject(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
 	return sendReqToGH(req, c, http.StatusCreated)
+}
+
+// Returns all projects of some repo
+// User must be authenticated before
+// GET /repos/:ownerOfRepo/:repoName/projects
+// Returns 200 OK on success
+func getProjectsOfRepo(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/repos/"+c.Param("user")+"/"+c.Param("repo")+"/projects", c)
+}
+
+// Returns all details for a project
+// GET /projects/:projectID
+func getProjectDetails(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID"), c)
 }
 
 // Deletes a project
@@ -196,19 +196,6 @@ func createNewColumn(c echo.Context) error {
 	return sendReqToGH(req, c, http.StatusCreated)
 }
 
-// Deletes a project column
-// DELETE /projects/columns/:column_id
-// Returns 204 No Content on success
-func deleteColumn(c echo.Context) error {
-	// Send DELETE request to GH with columnID
-	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/"+c.Param("columnID"), nil)
-	if err != nil {
-		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
-	}
-	return sendReqToGH(req, c, http.StatusNoContent)
-}
-
 // Returns all Columns of some project
 // User must be authenticated before
 // GET /project/:projectID/columns
@@ -246,6 +233,19 @@ func updateColumn(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
 	return sendReqToGH(req, c, http.StatusOK)
+}
+
+// Deletes a project column
+// DELETE /projects/columns/:column_id
+// Returns 204 No Content on success
+func deleteColumn(c echo.Context) error {
+	// Send DELETE request to GH with columnID
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/"+c.Param("columnID"), nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusNoContent)
 }
 
 // Moves a Column to a specific position
@@ -300,19 +300,6 @@ func createNewCard(c echo.Context) error {
 	return sendReqToGH(req, c, http.StatusCreated)
 }
 
-// Delete a project card
-// DELETE /cards/:card_id
-// Returns Status: 204 No Content on success
-func deleteCard(c echo.Context) error {
-	// Send DELETE request to GH with cardID
-	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/cards/"+c.Param("cardID"), nil)
-	if err != nil {
-		log.Fatal(err)
-		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
-	}
-	return sendReqToGH(req, c, http.StatusNoContent)
-}
-
 // Returns all cards of some column
 // User must be authenticated before
 // GET /column/:columnID/cards
@@ -350,6 +337,19 @@ func updateCard(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
 	return sendReqToGH(req, c, http.StatusOK)
+}
+
+// Delete a project card
+// DELETE /cards/:card_id
+// Returns Status: 204 No Content on success
+func deleteCard(c echo.Context) error {
+	// Send DELETE request to GH with cardID
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/cards/"+c.Param("cardID"), nil)
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusNoContent)
 }
 
 // Moves a Card to a specific position
@@ -393,7 +393,7 @@ func main() {
 	app.POST("/repos/:user/:repo/projects", createNewProject)
 	app.GET("/repos/:user/:repo/projects", getProjectsOfRepo)
 	app.GET("/projects/:projectID", getProjectDetails)
-	// TODO: app.PATCH("/projects/:projectID", updateProject)
+	app.PATCH("/projects/:projectID", updateProject)
 	app.DELETE("/projects/:projectID", deleteProject)
 	
 	// COLOUMNS 
