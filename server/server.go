@@ -302,6 +302,31 @@ func getCardDetails(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/columns/cards/"+c.Param("cardID"), c)
 }
 
+// Updates a card
+// PATCH /cards/:cardID
+// Returns 201 Created on success
+func updateCard(c echo.Context) error {
+	// Create new card object
+	card := new(Card)
+	if err := c.Bind(card); err != nil {
+		return err
+	}
+
+	// Convert card to JSON
+	jsonObj, err := json.Marshal(card)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with card object
+	req, err := http.NewRequest("PATCH", "https://api.github.com/projects/columns/cards/"+c.Param("cardID"), bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusCreated)
+}
+
 // Moves a Card to a specific position
 // POST /cards/:cardID/moves
 // Returns 200 OK on success
@@ -358,7 +383,7 @@ func main() {
 	app.POST("/columns/:columnID/cards", createNewCard)
 	app.GET("/columns/:columnID/cards", getCardsOfColumn)
 	app.GET("/cards/:cardID", getCardDetails)
-	// TODO: app.PATCH("/cards/:cardID", updateCard)
+	app.PATCH("/cards/:cardID", updateCard)
 	app.DELETE("/cards/:cardID", deleteCard)
 	app.POST("/cards/:cardID/moves", moveCard)
 
