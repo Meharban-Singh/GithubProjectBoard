@@ -201,6 +201,14 @@ func deleteColumn(c echo.Context) error {
 	return sendReqToGH(req, c, http.StatusNoContent)
 }
 
+// Returns all Columns of some project
+// User must be authenticated before
+// GET /project/:projectID/columns
+// Returns 200 OK on success
+func getColumnsOfProject(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID")+"/columns", c)
+}
+
 // Creates a project card
 // POST /columns/:column_id/cards
 // Returns 201 Created on success
@@ -258,7 +266,7 @@ func main() {
 	
 	// COLOUMNS 
 	app.POST("/projects/:projectID/columns", createNewColumn)
-	// TODO: app.GET("/projects/:projectID/columns", getColumnsOfProject)
+	app.GET("/projects/:projectID/columns", getColumnsOfProject)
 	// TODO: app.GET("/columns/:columnID", getColumnDetails)
 	// TODO: app.PATCH("/columns/:columnID", updateColumn)
 	app.DELETE("/columns/:columnID", deleteColumn)
