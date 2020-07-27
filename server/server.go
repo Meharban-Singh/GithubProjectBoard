@@ -218,7 +218,7 @@ func createNewCard(c echo.Context) error {
 	}
 
 	// Send POST req to GH with card object
-	req, err := http.NewRequest("POST", "http://api.github.com/projects/columns/"+c.Param("columnID")+"/cards", bytes.NewBuffer(jsonObj))
+	req, err := http.NewRequest("POST", "https://api.github.com/projects/columns/"+c.Param("columnID")+"/cards", bytes.NewBuffer(jsonObj))
 	if err != nil {
 		log.Fatal(err)
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
@@ -227,11 +227,11 @@ func createNewCard(c echo.Context) error {
 }
 
 // Delete a project card
-// DELETE /columns/cards/:card_id
+// DELETE /cards/:card_id
 // Returns Status: 204 No Content on success
 func deleteCard(c echo.Context) error {
 	// Send DELETE request to GH with cardID
-	req, err := http.NewRequest("DELETE", "http://api.github.com/projects/columns/cards/"+c.Param("cardID"), nil)
+	req, err := http.NewRequest("DELETE", "https://api.github.com/projects/columns/cards/"+c.Param("cardID"), nil)
 	if err != nil {
 		log.Fatal(err)
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
