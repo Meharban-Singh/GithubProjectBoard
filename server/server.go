@@ -158,6 +158,31 @@ func getProjectDetails(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID"), c)
 }
 
+// Updates a Project
+// PATCH /projects/:projectID
+// Returns 200 OK on success
+func updateProject(c echo.Context) error {
+	// Create new Project object
+	project := new(Project)
+	if err := c.Bind(project); err != nil {
+		return err
+	}
+
+	// Convert card to JSON
+	jsonObj, err := json.Marshal(project)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with card object
+	req, err := http.NewRequest("PATCH", "https://api.github.com/projects/"+c.Param("projectID"), bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusOK)
+}
+
 // Deletes a project
 // DELETE /projects/:projectID
 // Returns 204 No Content on success
