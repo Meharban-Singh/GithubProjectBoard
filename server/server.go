@@ -209,6 +209,12 @@ func getColumnsOfProject(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/"+c.Param("projectID")+"/columns", c)
 }
 
+// Returns all details for a column
+// GET /columns/:columnID
+func getColumnDetails(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/projects/columns/"+c.Param("columnID"), c)
+}
+
 // Creates a project card
 // POST /columns/:column_id/cards
 // Returns 201 Created on success
@@ -275,7 +281,7 @@ func main() {
 	// COLOUMNS 
 	app.POST("/projects/:projectID/columns", createNewColumn)
 	app.GET("/projects/:projectID/columns", getColumnsOfProject)
-	// TODO: app.GET("/columns/:columnID", getColumnDetails)
+	app.GET("/columns/:columnID", getColumnDetails)
 	// TODO: app.PATCH("/columns/:columnID", updateColumn)
 	app.DELETE("/columns/:columnID", deleteColumn)
 	// TODO: app.POST("/columns/:columnID/moves", moveColumn)
