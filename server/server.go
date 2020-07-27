@@ -223,6 +223,31 @@ func getColumnDetails(c echo.Context) error {
 	return sendGETReqToGH("https://api.github.com/projects/columns/"+c.Param("columnID"), c)
 }
 
+// Updates a column
+// PATCH /column/:columnID
+// Returns 200 OK on success
+func updateColumn(c echo.Context) error {
+	// Create new card object
+	column := new(Column)
+	if err := c.Bind(column); err != nil {
+		return err
+	}
+
+	// Convert card to JSON
+	jsonObj, err := json.Marshal(column)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with card object
+	req, err := http.NewRequest("PATCH", "https://api.github.com/projects/columns/"+c.Param("columnID"), bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusOK)
+}
+
 // Moves a Column to a specific position
 // POST /columns/:columnID/moves
 // Returns 200 OK on success
@@ -304,7 +329,7 @@ func getCardDetails(c echo.Context) error {
 
 // Updates a card
 // PATCH /cards/:cardID
-// Returns 201 Created on success
+// Returns 200 OK on success
 func updateCard(c echo.Context) error {
 	// Create new card object
 	card := new(Card)
@@ -324,7 +349,7 @@ func updateCard(c echo.Context) error {
 		log.Fatal(err)
 		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
 	}
-	return sendReqToGH(req, c, http.StatusCreated)
+	return sendReqToGH(req, c, http.StatusOK)
 }
 
 // Moves a Card to a specific position
@@ -375,7 +400,7 @@ func main() {
 	app.POST("/projects/:projectID/columns", createNewColumn)
 	app.GET("/projects/:projectID/columns", getColumnsOfProject)
 	app.GET("/columns/:columnID", getColumnDetails)
-	// TODO: app.PATCH("/columns/:columnID", updateColumn)
+	app.PATCH("/columns/:columnID", updateColumn)
 	app.DELETE("/columns/:columnID", deleteColumn)
 	app.POST("/columns/:columnID/moves", moveColumn)
 	
