@@ -247,6 +247,14 @@ func deleteCard(c echo.Context) error {
 	return sendReqToGH(req, c, http.StatusNoContent)
 }
 
+// Returns all cards of some column
+// User must be authenticated before
+// GET /column/:columnID/cards
+// Returns 200 OK on success
+func getCardsOfColumn(c echo.Context) error {
+	return sendGETReqToGH("https://api.github.com/projects/columns/"+c.Param("columnID")+"/cards", c)
+}
+
 // Main function
 func main() {
 	// Create a new echo object
@@ -274,7 +282,7 @@ func main() {
 	
 	// CARDS 
 	app.POST("/columns/:columnID/cards", createNewCard)
-	// TODO: app.GET("/columns/:columnID/cards", getCardsOfColumn)
+	app.GET("/columns/:columnID/cards", getCardsOfColumn)
 	// TODO: app.GET("/cards/:cardID", getCardDetails)
 	// TODO: app.PATCH("/cards/:cardID", updateCard)
 	app.DELETE("/cards/:cardID", deleteCard)
