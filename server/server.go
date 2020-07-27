@@ -20,14 +20,22 @@ type (
 		Name string `json:"name" xml:"name" form:"name" query:"name"`
 		Body string `json:"body" xml:"body" form:"body" query:"body"`
 	}
+
 	// Column struct
 	Column struct {
 		Name string `json:"name" xml:"name" form:"name" query:"name"`
 	}
+
 	// Card struct
 	Card struct {
 		Note string `json:"note" xml:"note" form:"note" query:"note"`
 	}
+
+	// Card struct
+	Moves struct {
+		Position string `json:"position" xml:"position" form:"position" query:"position"`
+	}
+
 	// Config struct -> should be same as config.js
 	ConfigObj struct {
 		PAT string
@@ -240,6 +248,33 @@ func createNewCard(c echo.Context) error {
 	return sendReqToGH(req, c, http.StatusCreated)
 }
 
+// Moves s  Column to a specific position
+// POST /columns/:column_id/moves
+// Returns 200 OK on success
+// Req body - { "position" : "first"} 
+// Other options for position: last, after:colID
+func moveColumn(c echo.Context) error {
+	// Create new moves object
+	moves := new(Moves)
+	if err := c.Bind(moves); err != nil {
+		return err
+	}
+
+	// Convert card to JSON
+	jsonObj, err := json.Marshal(moves)
+	if err != nil {
+		print(err)
+	}
+
+	// Send POST req to GH with card object
+	req, err := http.NewRequest("POST", "https://api.github.com/projects/columns/"+c.Param("columnID")+"/moves", bytes.NewBuffer(jsonObj))
+	if err != nil {
+		log.Fatal(err)
+		return c.String(http.StatusInternalServerError, "FATAL: Cannot send request!")
+	}
+	return sendReqToGH(req, c, http.StatusCreated)
+}
+
 // Delete a project card
 // DELETE /cards/:card_id
 // Returns Status: 204 No Content on success
@@ -290,7 +325,7 @@ func main() {
 	app.GET("/columns/:columnID", getColumnDetails)
 	// TODO: app.PATCH("/columns/:columnID", updateColumn)
 	app.DELETE("/columns/:columnID", deleteColumn)
-	// TODO: app.POST("/columns/:columnID/moves", moveColumn)
+	app.POST("/columns/:columnID/moves", moveColumn)
 	
 	// CARDS 
 	app.POST("/columns/:columnID/cards", createNewCard)
